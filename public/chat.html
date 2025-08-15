@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: #000;
+      color: #fff;
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header .emoji {
+      font-size: 1.5rem;
+    }
+
+    #chat {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: #f8f8f8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      max-width: 80%;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #d4f0ff;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #eaeaea;
+    }
+
+    .avatar {
+      font-size: 1.4rem;
+    }
+
+    .text {
+      flex: 1;
+    }
+
+    #inputContainer {
+      display: flex;
+      padding: 1rem;
+      background: white;
+    }
+
+    #messageInput {
+      flex: 1;
+      font-size: 1rem;
+      padding: 0.5rem;
+    }
+
+    #sendBtn {
+      padding: 0.5rem 1rem;
+      margin-left: 0.5rem;
+    }
+
+    #backBtn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 0.6rem;
+      background: #f1f1f1;
+    }
+
+    footer a {
+      color: #000;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <button id="backBtn" onclick="location.href='index.html'">← Back</button>
+  <header id="botName"><span class="emoji">🤖</span> Chat</header>
+  <div id="chat"></div>
+  <div id="inputContainer">
+    <input type="text" id="messageInput" placeholder="Say something..." />
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <footer>
+    made by <a href="https://x.com/0xsamxbt" target="_blank">@0xsamxbt</a>
+  </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const bot = urlParams.get('bot');
+
+    const botMeta = {
+      ANI: { emoji: '🧢', name: 'ANI' },
+      ARI: { emoji: '💋', name: 'ARI' }
+    };
+
+    const chatEl = document.getElementById('chat');
+    const headerEl = document.getElementById('botName');
+
+    if (botMeta[bot]) {
+      headerEl.innerHTML = `<span class="emoji">${botMeta[bot].emoji}</span> ${botMeta[bot].name}`;
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('messageInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    function appendMessage(sender, text) {
+      const message = document.createElement('div');
+      message.className = `message ${sender}`;
+
+      const avatar = document.createElement('span');
+      avatar.className = 'avatar';
+      avatar.textContent = sender === 'user' ? '👤' : botMeta[bot]?.emoji || '🤖';
+
+      const bubble = document.createElement('span');
+      bubble.className = 'text';
+      bubble.textContent = text;
+
+      message.appendChild(avatar);
+      message.appendChild(bubble);
+      chatEl.appendChild(message);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage('user', text);
+      input.value = '';
+
+      try {
+        const res = await fetch(`/api/chat/${bot}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        appendMessage('bot', data.reply || '⚠️ No response.');
+      } catch (err) {
+        console.error(err);
+        appendMessage('bot', '⚠️ Error talking to the bot.');
+      }
+    }
+  </script>
+</body>
+</html>

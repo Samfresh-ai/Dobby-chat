@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Your Vibe</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fdfdfd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+    }
+
+    .bots {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 200px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      margin-bottom: 1rem;
+    }
+
+    .chat-btn {
+      background: black;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Who you vibin’ with today?</h1>
+  <div class="bots">
+    <div class="card">
+      <h2>🧢 ANI</h2>
+      <p>Crypto bro & football fan</p>
+      <button class="chat-btn" onclick="location.href='chat.html?bot=ANI'">Chat</button>
+    </div>
+    <div class="card">
+      <h2>💋 ARI</h2>
+      <p>Unhinged GF vibes</p>
+      <button class="chat-btn" onclick="location.href='chat.html?bot=ARI'">Chat</button>
+    </div>
+  </div>
+  <footer>
+    made by <a href="https://x.com/0xsamxbt" target="_blank">0xsamxbt</a>
+  </footer>
+</body>
+</html>
