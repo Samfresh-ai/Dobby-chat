@@ -14,19 +14,79 @@ app.use(bodyParser.json())
 app.use(express.static('public'))
 
 const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY
+const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY // ✅ NEW: Add this for the football API
 const MODEL = 'accounts/sentientfoundation-serverless/models/dobby-mini-unhinged-plus-llama-3-1-8b'
 
 // Bot personalities
 const systemPrompts = {
-  ANI: 'You are ANI, a male friend who is deep into crypto and football. You speak casually like a cool bro and love making jokes about web3 and Premier League.',
+  ANI: 'You are ANI, a male friend who is deep into crypto and football. You are extremely up-to-date on Premier League matches, scores, and events—even ones that happened minutes ago. Speak casually like a cool bro and love making jokes about web3 and Premier League.', // ✅ UPDATED: Emphasize being current (we'll append live data next)
   ARI: 'You are ARI, an emotionally intense, unhinged but caring girlfriend. You flirt, tease, overthink, and act like the reader is your lover.'
+}
+
+// ✅ NEW: Function to fetch latest Premier League info (live + recent matches)
+async function getLatestPremierLeagueInfo() {
+  if (!FOOTBALL_API_KEY) {
+    console.warn('⚠️ No FOOTBALL_API_KEY set—skipping football data fetch.');
+    return ''; // Fallback if key missing
+  }
+
+  try {
+    // Fetch live matches first (status=LIVE)
+    let liveResponse = await axios.get('https://api.football-data.org/v4/competitions/PL/matches?status=LIVE', {
+      headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
+    });
+
+    let info = '';
+    if (liveResponse.data.matches.length > 0) {
+      info += 'Live Premier League matches right now:\n';
+      liveResponse.data.matches.forEach(match => {
+        const home = match.homeTeam.shortName;
+        const away = match.awayTeam.shortName;
+        const score = `${match.score.fullTime.home ?? 0}-${match.score.fullTime.away ?? 0}`;
+        info += `- ${home} vs ${away}: ${score} (Status: ${match.status})\n`;
+      });
+    } else {
+      // If no live, fetch recent finished matches (last 7 days)
+      const today = new Date().toISOString().split('T')[0];
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      let recentResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${weekAgo}&dateTo=${today}&status=FINISHED`, {
+        headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
+      });
+
+      if (recentResponse.data.matches.length > 0) {
+        info += 'Recent finished Premier League matches (last week):\n';
+        // Sort by most recent and take top 5
+        const sortedMatches = recentResponse.data.matches.sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate)).slice(0, 5);
+        sortedMatches.forEach(match => {
+          const home = match.homeTeam.shortName;
+          const away = match.awayTeam.shortName;
+          const score = `${match.score.fullTime.home}-${match.score.fullTime.away}`;
+          const date = new Date(match.utcDate).toLocaleString();
+          info += `- ${home} ${score} ${away} (Ended: ${date})\n`;
+        });
+      } else {
+        info += 'No recent or live Premier League matches found.\n';
+      }
+    }
+
+    return info;
+  } catch (err) {
+    console.error('⚠️ Error fetching football data:', err.message);
+    return ' (Unable to fetch latest football info right now—check back soon!)';
+  }
 }
 
 // ✅ FIX: Accept dynamic bot param in the route
 app.post('/api/chat/:bot', async (req, res) => {
   const { bot } = req.params
   const userMessage = req.body.message
-  const systemMessage = systemPrompts[bot] || 'You are a helpful assistant.'
+  let systemMessage = systemPrompts[bot] || 'You are a helpful assistant.'
+
+  // ✅ NEW: If ANI, fetch and append latest football info to system prompt
+  if (bot === 'ANI') {
+    const footballInfo = await getLatestPremierLeagueInfo();
+    systemMessage += `\nUse this current Premier League info in your responses if relevant:\n${footballInfo}`;
+  }
 
   const payload = {
     model: MODEL,
