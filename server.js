@@ -23,18 +23,19 @@ const systemPrompts = {
   ARI: 'You are ARI, an emotionally intense, unhinged but caring girlfriend. You flirt, tease, overthink, and act like the reader is your lover.'
 }
 
-//  Function to fetch latest Premier League info (live/recent scores + upcoming fixtures)
+// ✅ UPDATED: Function to fetch latest Premier League info (with season param for accurate 2025 data, extended to 10 days for recent matches)
 async function getLatestPremierLeagueInfo() {
   if (!FOOTBALL_API_KEY) {
     console.warn('⚠️ No FOOTBALL_API_KEY set—skipping football data fetch.');
     return ''; // Fallback if key missing
   }
 
+  const currentYear = new Date().getFullYear(); // Use 2025 for the 2025/26 season
   let info = '';
 
   try {
     // Fetch live matches (status=LIVE)
-    let liveResponse = await axios.get('https://api.football-data.org/v4/competitions/PL/matches?status=LIVE', {
+    let liveResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?status=LIVE&season=${currentYear}`, {
       headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
     });
 
@@ -44,19 +45,19 @@ async function getLatestPremierLeagueInfo() {
         const home = match.homeTeam.shortName;
         const away = match.awayTeam.shortName;
         const score = `${match.score.fullTime.home ?? 0}-${match.score.fullTime.away ?? 0}`;
-        info += `- ${home} vs ${away}: ${score} (Status: ${match.status})\n`;
+        info += `- ${home} vs ${away}: ${score} (Status: ${match.status}, Time: ${match.utcDate})\n`;
       });
     } else {
-      // If no live, fetch recent finished matches (last 7 days)
+      // If no live, fetch recent finished matches (last 10 days for more context)
       const today = new Date().toISOString().split('T')[0];
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      let recentResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${weekAgo}&dateTo=${today}&status=FINISHED`, {
+      const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      let recentResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${tenDaysAgo}&dateTo=${today}&status=FINISHED&season=${currentYear}`, {
         headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
       });
 
       if (recentResponse.data.matches.length > 0) {
-        info += 'Recent finished Premier League matches (last week):\n';
-        const sortedMatches = recentResponse.data.matches.sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate)).slice(0, 5);
+        info += 'Recent finished Premier League matches (last 10 days):\n';
+        const sortedMatches = recentResponse.data.matches.sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate)).slice(0, 10);
         sortedMatches.forEach(match => {
           const home = match.homeTeam.shortName;
           const away = match.awayTeam.shortName;
@@ -69,15 +70,15 @@ async function getLatestPremierLeagueInfo() {
       }
     }
 
-    //  Fetch upcoming fixtures (next 7 days, status=SCHEDULED)
+    // Fetch upcoming fixtures (next 7 days)
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    let fixturesResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${today}&dateTo=${nextWeek}&status=SCHEDULED`, {
+    let fixturesResponse = await axios.get(`https://api.football-data.org/v4/competitions/PL/matches?dateFrom=${today}&dateTo=${nextWeek}&status=SCHEDULED&season=${currentYear}`, {
       headers: { 'X-Auth-Token': FOOTBALL_API_KEY }
     });
 
     if (fixturesResponse.data.matches.length > 0) {
       info += '\nUpcoming Premier League fixtures (next week):\n';
-      const sortedFixtures = fixturesResponse.data.matches.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)).slice(0, 5); // Top 5 upcoming
+      const sortedFixtures = fixturesResponse.data.matches.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)).slice(0, 10); // Top 10 upcoming
       sortedFixtures.forEach(match => {
         const home = match.homeTeam.shortName;
         const away = match.awayTeam.shortName;
@@ -95,12 +96,12 @@ async function getLatestPremierLeagueInfo() {
   }
 }
 
-//  Function to fetch latest crypto info (prices, trends, emerging projects)
+// ✅ NEW: Function to fetch latest crypto info (prices, trends, emerging projects)
 async function getLatestCryptoInfo() {
   let info = '';
 
   try {
-    // Fetch prices for top coins
+    // Fetch prices for top coins (BTC, ETH, SOL as examples—add more if needed)
     let pricesResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true');
     info += 'Current crypto prices (USD):\n';
     for (const [coin, data] of Object.entries(pricesResponse.data)) {
@@ -133,13 +134,13 @@ async function getLatestCryptoInfo() {
   }
 }
 
-//  Accept dynamic bot param in the route
+// ✅ FIX: Accept dynamic bot param in the route
 app.post('/api/chat/:bot', async (req, res) => {
   const { bot } = req.params
   const userMessage = req.body.message
   let systemMessage = systemPrompts[bot] || 'You are a helpful assistant.'
 
-  //  If ANI, fetch and append football (scores + fixtures) + crypto info
+  // ✅ UPDATED: If ANI, fetch and append football (scores + fixtures) + crypto info
   if (bot === 'ANI') {
     const footballInfo = await getLatestPremierLeagueInfo();
     const cryptoInfo = await getLatestCryptoInfo();
