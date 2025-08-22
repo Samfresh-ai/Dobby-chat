@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ Added for proper mobile scaling -->
   <title>Chat</title>
   <style>
     body {
@@ -102,6 +103,62 @@
     footer a {
       color: #000;
       text-decoration: none;
+    }
+
+    /* ✅ Added responsive media queries for phones (adjusts padding, sizes, and layout) */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh; /* Ensure full height on mobile */
+      }
+
+      header {
+        padding: 0.8rem; /* Slightly reduce padding */
+        font-size: 1rem; /* Smaller header text */
+      }
+
+      header .emoji {
+        font-size: 1.2rem; /* Adjust emoji size */
+      }
+
+      #chat {
+        padding: 0.5rem; /* Reduce padding for more space */
+      }
+
+      .message {
+        max-width: 95%; /* Wider messages on small screens */
+        padding: 0.6rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .avatar {
+        font-size: 1.2rem; /* Smaller avatars */
+      }
+
+      #inputContainer {
+        padding: 0.5rem; /* Reduce padding */
+        flex-direction: column; /* Stack input and button vertically on very small screens */
+      }
+
+      #messageInput {
+        margin-bottom: 0.5rem; /* Space if stacked */
+      }
+
+      #sendBtn {
+        width: 100%; /* Full-width button */
+        margin-left: 0;
+      }
+
+      #backBtn {
+        top: 0.5rem;
+        left: 0.5rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      footer {
+        padding: 0.4rem;
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>

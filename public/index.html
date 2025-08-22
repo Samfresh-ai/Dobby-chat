@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ✅ Added for proper mobile scaling -->
   <title>Select Your Vibe</title>
   <style>
     body {
@@ -60,6 +61,41 @@
 
     a:hover {
       text-decoration: underline;
+    }
+
+    /* ✅ Added responsive media queries for phones (stack cards vertically, adjust sizes) */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem; /* Add some padding for mobile edges */
+        justify-content: flex-start; /* Align to top for better scrolling */
+      }
+
+      h1 {
+        font-size: 1.5rem; /* Smaller heading */
+        margin-bottom: 1rem;
+      }
+
+      .bots {
+        flex-direction: column; /* Stack cards vertically on mobile */
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .card {
+        width: 100%; /* Full width on small screens */
+        max-width: 300px; /* Limit max width */
+        padding: 1rem;
+      }
+
+      .chat-btn {
+        width: 100%; /* Full-width button */
+        padding: 0.6rem;
+      }
+
+      footer {
+        font-size: 0.8rem;
+        margin-top: 1rem;
+      }
     }
   </style>
 </head>

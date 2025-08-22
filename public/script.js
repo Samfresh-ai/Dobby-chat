@@ -13,8 +13,7 @@ function appendMessage(text, sender) {
   div.className = `message ${sender}`;
 
   const avatar = document.createElement('span');
-  avatar.style.fontSize = '1.5rem';
-  avatar.style.marginRight = '0.5rem';
+  avatar.className = 'avatar'; // ✅ Use CSS class for styling (font-size, margin) instead of inline
 
   if (sender === 'user') {
     avatar.textContent = '🧍‍♂️';
@@ -23,6 +22,7 @@ function appendMessage(text, sender) {
   }
 
   const span = document.createElement('span');
+  span.className = 'text'; // ✅ Add class for consistency with CSS (if needed for responsiveness)
   span.textContent = text;
 
   div.appendChild(avatar);
